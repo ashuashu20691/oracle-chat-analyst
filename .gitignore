@@ -6,9 +6,14 @@
 data/
 logs/
 
-# LibreChat (full upstream clone — tracked separately)
-# We only commit our overlay config files via librechat-config/
-LibreChat/
+# LibreChat — track our customizations, skip heavy/generated stuff
+LibreChat/node_modules/
+LibreChat/api/node_modules/
+LibreChat/client/node_modules/
+LibreChat/packages/*/node_modules/
+LibreChat/api/logs/
+LibreChat/.env
+LibreChat/.env.bak
 
 # Node modules
 node_modules/
