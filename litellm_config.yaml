@@ -1,0 +1,31 @@
+model_list:
+  - model_name: oci-genai
+    litellm_params:
+      model: oci/google.gemini-2.5-flash
+      
+      # OCI GenAI endpoint
+      api_base: https://inference.generativeai.us-chicago-1.oci.oraclecloud.com
+      
+      # Authentication via OCI SDK Signer
+      custom_llm_provider: oci
+      
+      # OCI Configuration - explicitly specify all parameters
+      oci_user: ocid1.user.oc1..aaaaaaaa3tv55bsqrzi73r3me2e4fzqlludrslovvjx2jpixb37gt2chhyiq
+      oci_fingerprint: 98:39:18:58:27:ec:84:28:77:94:3c:a7:c6:26:6e:67
+      oci_tenancy: ocid1.tenancy.oc1..aaaaaaaafj37mytx22oquorcznlfuh77cd45int7tt7fo27tuejsfqbybzrq
+      oci_region: us-phoenix-1
+      oci_key_file: /Users/ashukum/.oci/oci_api_key.pem
+      
+      # OCI Compartment ID
+      oci_compartment_id: ocid1.compartment.oc1..aaaaaaaa5jnmxes5yog6ucgnrfttaeckgqewgvfkhaybd32km2lv25fghc4a
+      
+      # Disable streaming at model level to avoid chunk building errors
+      stream: false
+
+general_settings:
+  # Disable master key requirement for local development
+  # master_key: ${LITELLM_MASTER_KEY}
+  
+litellm_settings:
+  drop_params: true
+  modify_params: true

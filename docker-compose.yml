@@ -1,0 +1,107 @@
+version: '3.8'
+
+# LibreChat OCI SQL Explorer - Docker Compose Configuration
+# This configuration deploys all required services: LibreChat, LiteLLM, and SQLcl MCP Server
+
+services:
+  # MongoDB database for LibreChat
+  mongodb:
+    image: mongo:latest
+    container_name: librechat-mongodb
+    restart: unless-stopped
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin123
+    networks:
+      - librechat-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # LiteLLM proxy for OCI GenAI
+  litellm:
+    image: ghcr.io/berriai/litellm:latest
+    container_name: librechat-litellm
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./litellm_config.yaml:/app/config.yaml:ro
+      - ~/.oci:/root/.oci:ro
+    environment:
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
+    command: --config /app/config.yaml --port 4000
+    networks:
+      - librechat-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Oracle SQLcl MCP Server
+  sqlcl-mcp:
+    image: oracle/sqlcl-mcp-server:latest
+    container_name: librechat-sqlcl-mcp
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    environment:
+      - DB_CONNECTION_STRING=${DB_CONNECTION_STRING}
+      - DB_WALLET_PATH=/wallet
+      - TRANSPORT=streamable-http
+      - PORT=3100
+    volumes:
+      - ${DB_WALLET_PATH:-./wallet}:/wallet:ro
+    networks:
+      - librechat-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3100/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # LibreChat application
+  librechat:
+    image: ghcr.io/danny-avila/librechat:latest
+    container_name: librechat-app
+    restart: unless-stopped
+    ports:
+      - "3080:3080"
+    volumes:
+      - ./LibreChat/librechat.yaml:/app/librechat.yaml:ro
+      - librechat_data:/app/client/public/images
+    environment:
+      - MONGO_URI=mongodb://admin:admin123@mongodb:27017/LibreChat?authSource=admin
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
+      - HOST=0.0.0.0
+      - PORT=3080
+      - NODE_ENV=production
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      litellm:
+        condition: service_healthy
+      sqlcl-mcp:
+        condition: service_healthy
+    networks:
+      - librechat-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3080/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  librechat-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
+  librechat_data:
+    driver: local

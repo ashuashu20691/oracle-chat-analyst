@@ -1,0 +1,26 @@
+# Environment & Secrets
+.env
+.env.bak
+
+# Data & Logs
+data/
+logs/
+
+# LibreChat (full upstream clone — tracked separately)
+# We only commit our overlay config files via librechat-config/
+LibreChat/
+
+# Node modules
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.kiro/
+
+# Compiled Python
+__pycache__/
+*.pyc
